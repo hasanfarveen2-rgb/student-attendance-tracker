@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Student Attendance Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f1ea;--card:#fff;--ink:#1b2333;--muted:#667085;--line:#e1ddd0;--bus:#f5b301;--busd:#c98f00;--pres:#2e8b57;--abs:#c8382b;--late:#d98a00;--lv:#4a72c4;--onbus:#1b2333}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151f;--card:#192130;--ink:#eef1f6;--muted:#9aa5b8;--line:#2a3447;--pres:#4cc084;--abs:#ef6a5c;--late:#f0a830;--lv:#7a9be0}}
+:root[data-theme="dark"]{--bg:#10151f;--card:#192130;--ink:#eef1f6;--muted:#9aa5b8;--line:#2a3447;--pres:#4cc084;--abs:#ef6a5c;--late:#f0a830;--lv:#7a9be0}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.45}
+main{max-width:760px;margin:0 auto;padding:14px 14px 48px}
+h1{font-size:1.9rem;font-weight:800;margin:14px 0 2px;letter-spacing:-.02em}
+h2{font-size:1.1rem;font-weight:800;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 14px}
+.slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;border-radius:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.slider::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:center}
+.slide svg{border-radius:16px}
+.slide svg{display:block;width:100%;height:auto}
+.cap{padding:8px 4px 2px;font-weight:800;font-size:1.02rem}
+.cap small{display:block;font-weight:400;font-size:.8rem;color:var(--muted)}
+.dots{display:flex;justify-content:center;gap:7px;margin:8px 0 4px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--line);transition:all .2s}
+.dots i.on{background:var(--busd);width:22px;border-radius:5px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+.stat b{display:block;font-size:1.45rem;font-weight:800}
+.stat span{color:var(--muted);font-size:.78rem}
+.stat.big{background:var(--bus);border-color:var(--bus);color:var(--onbus)}
+.stat.big span{color:#4a3a00}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row+.row{margin-top:8px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--busd);outline-offset:2px}
+.grow{flex:1;min-width:110px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:10px 14px}
+.primary{background:var(--bus);border-color:var(--bus);color:var(--onbus);font-weight:800}
+.dlab{background:var(--bus);color:var(--onbus);border-radius:8px;padding:8px 10px;font-size:.9rem}
+.msg{color:var(--muted);font-size:.85rem;min-height:1.2em;margin-top:6px}
+.msg.err{color:var(--abs)}
+.stu{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.stu:first-child{border-top:0}
+.av{width:40px;height:40px;border-radius:50%;background:var(--bus);color:var(--onbus);display:grid;place-items:center;font-weight:800;flex:none}
+.info{flex:1;min-width:130px}
+.nm{font-weight:600}
+.rl{color:var(--muted);font-size:.8rem}
+.pc{font-weight:800;min-width:46px;text-align:right}
+.pc.low{color:var(--abs)}
+.low-row .av{background:var(--abs);color:#fff}
+.tog{display:flex;gap:5px}
+.tog button{width:40px;height:40px;padding:0;font-weight:800}
+.tog .on.P{background:var(--pres);border-color:var(--pres);color:#fff}
+.tog .on.A{background:var(--abs);border-color:var(--abs);color:#fff}
+.tog .on.L{background:var(--late);border-color:var(--late);color:#fff}
+.tog .on.E{background:var(--lv);border-color:var(--lv);color:#fff}
+.mini{border:0;background:none;color:var(--muted);padding:6px;font-size:.8rem;text-decoration:underline}
+.empty{color:var(--muted);text-align:center;padding:18px 0}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);width:min(92vw,420px);padding:16px;max-height:80vh}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.h{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:.92rem}
+.tag{font-weight:800}.tag.P{color:var(--pres)}.tag.A{color:var(--abs)}.tag.L{color:var(--late)}.tag.E{color:var(--lv)}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:8px 0 10px}
+.bar i{display:block;height:100%;background:var(--pres)}
+@media (prefers-reduced-motion:reduce){.dots i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<div class="slider" id="slider" aria-label="Swipe gallery" tabindex="0">
+ <div class="slide">
+  <svg viewBox="0 0 720 300" role="img" aria-label="College building with students arriving">
+   <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc4ee"/><stop offset="1" stop-color="#e3f4fc"/></linearGradient></defs>
+   <rect width="720" height="300" fill="url(#sky)"/>
+   <circle cx="630" cy="55" r="28" fill="#fff4b0"/>
+   <g fill="#fff" opacity=".92"><ellipse cx="110" cy="55" rx="48" ry="13"/><ellipse cx="140" cy="46" rx="32" ry="11"/><ellipse cx="450" cy="40" rx="44" ry="12"/></g>
+   <rect y="235" width="720" height="65" fill="#6fae6a"/>
+   <path d="M300 300 L330 235 H390 L420 300Z" fill="#e6d9b8"/>
+   <g transform="translate(150 70)">
+    <rect x="0" y="60" width="420" height="105" fill="#d9825b"/>
+    <rect x="120" y="40" width="180" height="125" fill="#e8946c"/>
+    <path d="M110 40 L210 0 L310 40Z" fill="#f5b301" stroke="#c98f00" stroke-width="3"/>
+    <circle cx="210" cy="26" r="9" fill="#1b2333"/>
+    <g fill="#fff6e0"><rect x="130" y="52" width="14" height="95"/><rect x="170" y="52" width="14" height="95"/><rect x="236" y="52" width="14" height="95"/><rect x="276" y="52" width="14" height="95"/></g>
+    <rect x="193" y="95" width="34" height="70" rx="17" fill="#1b2333"/>
+    <g fill="#bfe4f6" stroke="#1b2333" stroke-width="2"><rect x="18" y="80" width="28" height="38" rx="3"/><rect x="62" y="80" width="28" height="38" rx="3"/><rect x="330" y="80" width="28" height="38" rx="3"/><rect x="374" y="80" width="28" height="38" rx="3"/></g>
+    <rect x="105" y="160" width="210" height="10" fill="#cfc4aa"/><rect x="95" y="168" width="230" height="10" fill="#bdb299"/>
+    <path d="M210 0V-28" stroke="#1b2333" stroke-width="3"/><path d="M210 -28h28v14h-28z" fill="#c8382b"/>
+   </g>
+   <g><circle cx="70" cy="215" r="34" fill="#4f9a59"/><rect x="66" y="240" width="8" height="30" fill="#7a5a3a"/><circle cx="660" cy="215" r="34" fill="#4f9a59"/><rect x="656" y="240" width="8" height="30" fill="#7a5a3a"/></g>
+   <g><circle cx="270" cy="262" r="10" fill="#f1c7a0"/><rect x="262" y="272" width="16" height="22" rx="4" fill="#4a72c4"/><rect x="278" y="274" width="8" height="14" rx="2" fill="#c8382b"/>
+   <circle cx="320" cy="270" r="10" fill="#d9a77a"/><rect x="312" y="280" width="16" height="20" rx="4" fill="#2e8b57"/><rect x="328" y="282" width="8" height="12" rx="2" fill="#f5b301"/>
+   <circle cx="445" cy="264" r="10" fill="#f1c7a0"/><rect x="437" y="274" width="16" height="22" rx="4" fill="#c8382b"/><rect x="421" y="276" width="8" height="14" rx="2" fill="#4a72c4"/></g>
+   <g transform="translate(560 214) rotate(-8)"><rect width="46" height="60" rx="5" fill="#fff" stroke="#1b2333" stroke-width="3"/><rect x="14" y="-6" width="18" height="10" rx="3" fill="#f5b301" stroke="#1b2333" stroke-width="2"/><g stroke="#2e8b57" stroke-width="4" fill="none" stroke-linecap="round"><path d="M9 20l6 6 10-12"/><path d="M9 38l6 6 10-12"/></g><path d="M30 22h10M30 40h10" stroke="#667085" stroke-width="3"/></g>
+  </svg>
+  <div class="cap">Every student counts<small>Swipe to explore</small></div>
+ </div>
+ <div class="slide">
+  <svg viewBox="0 0 720 300" role="img" aria-label="Classroom board with attendance ticks">
+   <rect width="720" height="300" fill="#e9d9b8"/><rect y="230" width="720" height="70" fill="#b58b5a"/>
+   <rect x="60" y="30" width="600" height="170" rx="10" fill="#2f5d4a" stroke="#8a5a2b" stroke-width="10"/>
+   <g stroke="#f4f1e8" stroke-width="3" fill="none" stroke-linecap="round"><path d="M100 70H340M100 105H300M100 140H320"/><path d="M400 62l12 14 22-26M400 100l12 14 22-26M400 138l12 14 22-26" stroke="#8be0a8" stroke-width="5"/><path d="M500 62l24 24m0-24l-24 24" stroke="#ff8d80" stroke-width="5"/></g>
+   <text x="100" y="180" fill="#f4f1e8" font-size="22" font-weight="700">Roll call · Today</text>
+   <g><rect x="90" y="215" width="130" height="14" rx="3" fill="#8a5a2b"/><rect x="300" y="215" width="130" height="14" rx="3" fill="#8a5a2b"/><rect x="510" y="215" width="130" height="14" rx="3" fill="#8a5a2b"/></g>
+   <g><circle cx="155" cy="190" r="17" fill="#f1c7a0"/><rect x="138" y="205" width="34" height="12" rx="4" fill="#4a72c4"/><circle cx="365" cy="190" r="17" fill="#d9a77a"/><rect x="348" y="205" width="34" height="12" rx="4" fill="#c8382b"/><circle cx="575" cy="190" r="17" fill="#f1c7a0"/><rect x="558" y="205" width="34" height="12" rx="4" fill="#2e8b57"/></g>
+  </svg>
+  <div class="cap">Mark Present, Absent, Late or Leave<small>One status per student per day</small></div>
+ </div>
+ <div class="slide">
+  <svg viewBox="0 0 720 300" role="img" aria-label="Bar chart of weekly attendance">
+   <rect width="720" height="300" fill="#1b2333"/>
+   <g stroke="#34405a"><path d="M60 60H680M60 110H680M60 160H680M60 210H680"/></g>
+   <path d="M60 85H680" stroke="#f5b301" stroke-width="2" stroke-dasharray="8 6"/><text x="684" y="80" fill="#f5b301" font-size="14" text-anchor="end">75%</text>
+   <g fill="#4cc084"><rect x="90" y="70" width="60" height="140" rx="6"/><rect x="190" y="55" width="60" height="155" rx="6"/><rect x="290" y="90" width="60" height="120" rx="6"/><rect x="390" y="62" width="60" height="148" rx="6"/><rect x="490" y="100" width="60" height="110" rx="6" fill="#ef6a5c"/><rect x="590" y="50" width="60" height="160" rx="6"/></g>
+   <g fill="#9aa5b8" font-size="14" text-anchor="middle"><text x="120" y="236">Mon</text><text x="220" y="236">Tue</text><text x="320" y="236">Wed</text><text x="420" y="236">Thu</text><text x="520" y="236">Fri</text><text x="620" y="236">Sat</text></g>
+  </svg>
+  <div class="cap">Spot low attendance fast<small>Anyone under your threshold turns red</small></div>
+ </div>
+</div>
+<div class="dots" id="dots"></div>
+
+<h1>Student Attendance Tracker</h1>
+<p class="sub">Add students, mark each day, and watch who falls below the threshold.</p>
+
+<div class="stats">
+ <div class="stat"><b id="sT">0</b><span>Total students</span></div>
+ <div class="stat"><b id="sP">0</b><span>Present</span></div>
+ <div class="stat"><b id="sA">0</b><span>Absent</span></div>
+ <div class="stat big"><b id="sO">0%</b><span>Overall attendance</span></div>
+</div>
+
+<div class="panel">
+ <h2 id="fh">Add student</h2>
+ <div class="row">
+  <input id="sid" class="grow" placeholder="Student ID" aria-label="Student ID">
+  <input id="nm" class="grow" placeholder="Name" aria-label="Student name">
+  <input id="dp" class="grow" placeholder="Department" aria-label="Department" list="dl">
+  <datalist id="dl"></datalist>
+ </div>
+ <div class="row"><button class="primary" id="save">Add student</button><button id="cancel" hidden>Cancel edit</button></div>
+ <div class="msg" id="fmsg" role="status"></div>
+</div>
+
+<div class="panel">
+ <div class="row">
+  <label>Date <input type="date" id="date"></label><b id="dlab" class="dlab"></b>
+  <label>Low-attendance threshold <input type="number" id="th" min="1" max="100" style="width:80px"> %</label>
+  <button id="allP">Mark all present</button>
+ </div>
+ <div class="row">
+  <input id="q" type="search" class="grow" placeholder="Search name or ID" aria-label="Search students">
+  <select id="fd" aria-label="Filter by department"><option value="">All departments</option></select>
+  <select id="fs" aria-label="Filter by status">
+   <option value="">Any status</option><option value="P">Present</option><option value="A">Absent</option><option value="L">Late</option><option value="E">On leave</option><option value="U">Not marked</option><option value="LOW">Below threshold</option>
+  </select>
+ </div>
+ <div id="list" style="margin-top:6px"></div>
+</div>
+
+<dialog id="dlg"><div class="row" style="justify-content:space-between"><h2 id="dt"></h2><button id="dx" aria-label="Close">Close</button></div><div id="db"></div></dialog>
+</main>
+<script>
+(function(){
+var K='attendance-tracker-v3',ST={P:'Present',A:'Absent',L:'Late',E:'On leave'};
+var db={students:[],att:{},th:75};
+try{var s=localStorage.getItem(K);if(s)db=JSON.parse(s);}catch(e){}
+if(!db.students||!db.students.length){
+ var names=['Arun Kumar','Divya Sri','Karthik Raja','Lakshmi Priya','Mohammed Faiz','Nithya Sree','Praveen Raj','Swathi Reddy','Rufaya Nasrin','Shifana'];
+ db={students:names.map(function(n,i){return{id:'S'+(101+i),name:n,dept:i%2?'BCA':'BSc CS'}}),att:{},th:75};
+ for(var d=1;d<=5;d++){var dt=new Date();dt.setDate(dt.getDate()-d);var k=iso(dt);db.att[k]={};
+  db.students.forEach(function(st,i){db.att[k][st.id]=((i*3+d*7)%10<2)?'A':((i+d)%9==0?'L':'P')});}
+}
+function fmtD(d){return d?d.slice(8)+'.'+d.slice(5,7)+'.'+d.slice(0,4):''}
+function iso(d){return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
+function save(){try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}}
+var $=function(i){return document.getElementById(i)},editing=null;
+function h(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+$('date').value=iso(new Date());$('th').value=db.th;
+function stat(id){var a=0,c=0,rows=[];
+ Object.keys(db.att).sort().forEach(function(d){var v=db.att[d][id];if(!v)return;rows.push([d,v]);if(v!=='E'){c++;if(v==='P'||v==='L')a++}});
+ return{p:c?Math.round(a/c*100):null,rows:rows}}
+function mark(id,v){var d=$('date').value;if(!d)return;db.att[d]=db.att[d]||{};
+ if(db.att[d][id]===v)delete db.att[d][id];else db.att[d][id]=v; // one entry per student per date
+ save();render()}
+function render(){
+ var d=$('date').value;$('dlab').textContent=d?fmtD(d):'Pick a date';
+ var rec=db.att[d]||{},q=$('q').value.trim().toLowerCase(),fd=$('fd').value,fs=$('fs').value,list=$('list');
+ var depts=[];db.students.forEach(function(s){if(s.dept&&depts.indexOf(s.dept)<0)depts.push(s.dept)});
+ var cur=$('fd').value;$('fd').innerHTML='<option value="">All departments</option>';$('dl').innerHTML='';
+ depts.forEach(function(x){var o=h('option','',x);o.value=x;$('fd').appendChild(o);var o2=h('option');o2.value=x;$('dl').appendChild(o2)});$('fd').value=cur;
+ list.innerHTML='';var shown=db.students.filter(function(s){var p=stat(s.id).p,r=rec[s.id];
+  if(q&&s.name.toLowerCase().indexOf(q)<0&&s.id.toLowerCase().indexOf(q)<0)return false;
+  if(fd&&s.dept!==fd)return false;
+  if(fs==='U')return !r; if(fs==='LOW')return p!==null&&p<db.th; if(fs)return r===fs;return true});
+ if(!db.students.length)list.appendChild(h('div','empty','No students yet. Add one above.'));
+ else if(!shown.length)list.appendChild(h('div','empty','No students match these filters.'));
+ shown.forEach(function(s){var p=stat(s.id).p,low=p!==null&&p<db.th,row=h('div','stu'+(low?' low-row':''));
+  row.appendChild(h('div','av',s.name.charAt(0).toUpperCase()));
+  var info=h('div','info');info.appendChild(h('div','nm',s.name));info.appendChild(h('div','rl',s.id+(s.dept?' · '+s.dept:'')));row.appendChild(info);
+  row.appendChild(h('div','pc'+(low?' low':''),p===null?'–':p+'%'));
+  var tg=h('div','tog');Object.keys(ST).forEach(function(v){var b=h('button',v+(rec[s.id]===v?' on':''),v);b.title=ST[v];b.setAttribute('aria-label',ST[v]+': '+s.name);b.setAttribute('aria-pressed',rec[s.id]===v);b.onclick=function(){mark(s.id,v)};tg.appendChild(b)});row.appendChild(tg);
+  var hb=h('button','mini','History');hb.onclick=function(){hist(s)};
+  var eb=h('button','mini','Edit');eb.onclick=function(){edit(s)};
+  var db2=h('button','mini','Delete');db2.onclick=function(){if(db2.dataset.s){db.students=db.students.filter(function(x){return x.id!==s.id});Object.keys(db.att).forEach(function(k){delete db.att[k][s.id]});save();render()}else{db2.dataset.s=1;db2.textContent='Sure?'}};
+  row.append(hb,eb,db2);list.appendChild(row)});
+ var P=0,A=0;db.students.forEach(function(s){if(rec[s.id]==='P'||rec[s.id]==='L')P++;if(rec[s.id]==='A')A++});
+ $('sT').textContent=db.students.length;$('sP').textContent=P;$('sA').textContent=A;
+ var mk=P+A+db.students.filter(function(s){return rec[s.id]==='L'}).length*0;
+ var tot=0,ok=0;db.students.forEach(function(s){var r=rec[s.id];if(r&&r!=='E'){tot++;if(r==='P'||r==='L')ok++}});
+ $('sO').textContent=tot?Math.round(ok/tot*100)+'%':'–'}
+function hist(s){var st=stat(s.id);$('dt').textContent=s.name;var b=$('db');b.innerHTML='';
+ b.appendChild(h('div','rl',s.id+(s.dept?' · '+s.dept:'')+' · '+(st.p===null?'No records':st.p+'% attendance')));
+ var bar=h('div','bar'),i=h('i');i.style.width=(st.p||0)+'%';bar.appendChild(i);b.appendChild(bar);
+ if(!st.rows.length)b.appendChild(h('div','empty','No attendance marked yet.'));
+ st.rows.slice().reverse().forEach(function(r){var x=h('div','h');x.appendChild(h('span','',fmtD(r[0])));x.appendChild(h('span','tag '+r[1],ST[r[1]]));b.appendChild(x)});
+ $('dlg').showModal()}
+function edit(s){editing=s.id;$('sid').value=s.id;$('nm').value=s.name;$('dp').value=s.dept||'';$('fh').textContent='Edit student';$('save').textContent='Save changes';$('cancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'});$('nm').focus()}
+function reset(){editing=null;$('sid').value=$('nm').value=$('dp').value='';$('fh').textContent='Add student';$('save').textContent='Add student';$('cancel').hidden=true}
+function fm(t,e){var m=$('fmsg');m.textContent=t;m.className='msg'+(e?' err':'')}
+$('save').onclick=function(){var id=$('sid').value.trim(),n=$('nm').value.trim(),dp=$('dp').value.trim();
+ if(!id||!n){fm('Student ID and name are both required.',1);return}
+ if(db.students.some(function(s){return s.id===id&&s.id!==editing})){fm('That student ID already exists.',1);return}
+ if(editing){var s=db.students.filter(function(x){return x.id===editing})[0];
+  if(id!==editing)Object.keys(db.att).forEach(function(k){if(db.att[k][editing]){db.att[k][id]=db.att[k][editing];delete db.att[k][editing]}});
+  s.id=id;s.name=n;s.dept=dp;fm(n+' updated.')}
+ else{db.students.push({id:id,name:n,dept:dp});fm(n+' added.')}
+ reset();save();render()};
+$('cancel').onclick=function(){reset();fm('')};
+$('allP').onclick=function(){var d=$('date').value;if(!d)return;db.att[d]=db.att[d]||{};db.students.forEach(function(s){db.att[d][s.id]='P'});save();render()};
+$('th').onchange=function(){var v=parseInt($('th').value,10);if(v>=1&&v<=100){db.th=v;save();render()}};
+['date','q','fd','fs'].forEach(function(i){$(i).oninput=render;$(i).onchange=render});
+$('dx').onclick=function(){$('dlg').close()};
+var sl=$('slider'),dots=$('dots'),n=sl.children.length;
+for(var i=0;i<n;i++){var dd=h('i');dots.appendChild(dd)}
+function dot(){var k=Math.round(sl.scrollLeft/sl.clientWidth);Array.prototype.forEach.call(dots.children,function(x,j){x.className=j===k?'on':''})}
+sl.addEventListener('scroll',dot);dot();
+sl.addEventListener('keydown',function(e){if(e.key==='ArrowRight')sl.scrollBy({left:sl.clientWidth,behavior:'smooth'});if(e.key==='ArrowLeft')sl.scrollBy({left:-sl.clientWidth,behavior:'smooth'})});
+var user=false;['pointerdown','touchstart','keydown','wheel'].forEach(function(ev){sl.addEventListener(ev,function(){user=true},{passive:true})});
+if(!navigator.webdriver&&!matchMedia('(prefers-reduced-motion:reduce)').matches){setInterval(function(){if(user)return;var k=(Math.round(sl.scrollLeft/sl.clientWidth)+1)%n;sl.scrollTo({left:k*sl.clientWidth,behavior:'smooth'})},4500)}
+render();
+})();
+</script>
+</body>
+</html>
